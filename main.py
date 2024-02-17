@@ -21,7 +21,7 @@ LOG_STEPS=1
 loss_type = "cross" #mse, cross, ordinal
 
 checkpoint_e = 1
-filename = "check_mse_lr_6e_6"
+filename = "hybrid_ordinal_lr_6e_6"
 extra_features = ["recipe_name", "reply_count", "thumbs_up", "thumbs_down", "user_id"]
 
 df = pd.read_csv("./Dataset/preprocessed_data.csv")
@@ -99,9 +99,11 @@ for e in tqdm(range(1,EPOCHS+1),position=1):
         #transfer to gpu
         for key in inp:
             inp[key] = inp[key].to(DEVICE)
+        for key in extra_ins:
+            extra_ins[key] = extra_ins[key].to(DEVICE)
         labels = labels.to(DEVICE)
         
-        pred = rmodel(**inp)
+        pred = rmodel(**inp,**kwargs)
 
         loss = criterion(pred,labels, loss_type)
         
