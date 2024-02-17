@@ -18,7 +18,7 @@ BATCH_SIZE=32
 EPOCHS=10
 LR=6e-6
 LOG_STEPS=1
-loss_type = "ordinal" #mse, cross, ordinal
+loss_type = "cross" #mse, cross, ordinal
 
 checkpoint_e = 1
 filename = "check_mse_lr_6e_6"
@@ -38,7 +38,7 @@ valid_dataset = RecipeDataset(X_test, y_test)
 train_loader = DataLoader(train_dataset,batch_size=BATCH_SIZE,shuffle=True)
 valid_loader = DataLoader(valid_dataset,batch_size=BATCH_SIZE,shuffle=False)
 
-rmodel = RecipeModel()
+rmodel = RecipeModel(num_users=train_dataset.num_users)
 
 optimizer = torch.optim.Adam(params=rmodel.parameters())
 criterion = custom_loss  # torch.nn.CrossEntropyLoss()
@@ -61,11 +61,13 @@ for e in tqdm(range(1,EPOCHS+1),position=1):
         #transfer to gpu
         for key in inp:
             inp[key] = inp[key].to(DEVICE)
+        for key in extra_ins:
+            extra_ins[key] = extra_ins[key].to(DEVICE)
         labels = labels.to(DEVICE)
 
         optimizer.zero_grad()
         
-        pred = rmodel(**inp)
+        pred = rmodel(**inp,**extra_ins)
 
         loss = criterion(pred,labels, loss_type)
 

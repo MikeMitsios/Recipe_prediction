@@ -1,5 +1,6 @@
 from transformers import RobertaTokenizer
 from torch.utils.data import Dataset
+from tqdm import tqdm
 
 class RecipeDataset(Dataset):
 
@@ -19,6 +20,18 @@ class RecipeDataset(Dataset):
 
         if 'recipe_name' in feats:
             self.X = self.recipe_names + " : " + self.text
+        
+        if 'user_id' in feats:
+            self.user2idx = {}
+
+            print("Enumerating users")
+            count = 0
+            for usr in tqdm(self.user_id):
+                if usr not in self.user2idx:
+                    self.user2idx[usr] = count
+                    count += 1
+            print("Done")
+            self.num_users = count
 
         self.tokenizer = RobertaTokenizer.from_pretrained("roberta-base")
 
@@ -44,6 +57,9 @@ class RecipeDataset(Dataset):
 
         if 'thumbs_down' in self.feats:
             extra_ins['thumbs_down'] = self.thumbs_down[idx]
+        
+        if 'user_id' in self.feats:
+            extra_ins['user_id'] = self.user2idx[self.user_id[idx]]
 
 
         tokenized_text['input_ids'] = tokenized_text['input_ids'].squeeze(0)
