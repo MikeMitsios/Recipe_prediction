@@ -13,8 +13,16 @@ class RecipeModel(nn.Module):
         
         self.head = RobertaClassificationHead(self.bert.config)
 
-    def forward(self,**kwargs):
+    def forward(self,input_ids,attention_mask,**kwargs):
+        
 
-        x = self.bert(**kwargs)
+        x = self.bert(input_ids=input_ids,attention_mask=attention_mask)
         
         return self.head(x[0])
+    
+    def inference(self,input_ids,attention_mask,**kwargs):
+        x = self.bert(input_ids=input_ids,attention_mask=attention_mask)
+
+        return self.head(x[0]).argmax(-1)
+
+
