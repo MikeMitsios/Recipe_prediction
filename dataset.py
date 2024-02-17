@@ -1,6 +1,7 @@
 from transformers import RobertaTokenizer
 from torch.utils.data import Dataset
 from tqdm import tqdm
+import torch
 
 class RecipeDataset(Dataset):
 
@@ -21,18 +22,6 @@ class RecipeDataset(Dataset):
         if 'recipe_name' in feats:
             self.X = self.recipe_names + " : " + self.text
         
-        if 'user_id' in feats:
-            self.user2idx = {}
-
-            print("Enumerating users")
-            count = 0
-            for usr in tqdm(self.user_id):
-                if usr not in self.user2idx:
-                    self.user2idx[usr] = count
-                    count += 1
-            print("Done")
-            self.num_users = count
-
         self.tokenizer = RobertaTokenizer.from_pretrained("roberta-base")
 
     def __len__(self):
@@ -50,18 +39,14 @@ class RecipeDataset(Dataset):
         )
         extra_ins = {}
         if 'reply_count' in self.feats:
-            extra_ins['reply_count'] = self.reply_count[idx]
+            extra_ins['reply_count'] = torch.tensor(self.reply_count[idx]).to(torch.float)
 
         if 'thumbs_up' in self.feats:
-            extra_ins['thumbs_up'] = self.thumbs_up[idx]
+            extra_ins['thumbs_up'] = torch.tensor(self.thumbs_up[idx]).to(torch.float)
 
         if 'thumbs_down' in self.feats:
-            extra_ins['thumbs_down'] = self.thumbs_down[idx]
+            extra_ins['thumbs_down'] = torch.tensor(self.thumbs_down[idx]).to(torch.float)
         
-        if 'user_id' in self.feats:
-            extra_ins['user_id'] = self.user2idx[self.user_id[idx]]
-
-
         tokenized_text['input_ids'] = tokenized_text['input_ids'].squeeze(0)
         tokenized_text['attention_mask'] = tokenized_text['attention_mask'].squeeze(0)
         return tokenized_text, extra_ins, score

@@ -29,16 +29,16 @@ data_features = df[["text"]+extra_features].to_numpy()
 num_classes = len(df["stars"].unique())
 data_stars = df[["stars"]].to_numpy().squeeze(-1) 
 #print(data_features.head())
-X_train, X_test, y_train, y_test = train_test_split( data_features, data_stars, test_size=0.20, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split( data_features[:100], data_stars[:100], test_size=0.20, random_state=42)
 
 train_dataset = RecipeDataset(X_train, y_train,feats=['text']+extra_features)
-valid_dataset = RecipeDataset(X_test, y_test)
+valid_dataset = RecipeDataset(X_test, y_test,feats=['text']+extra_features)
 
 
 train_loader = DataLoader(train_dataset,batch_size=BATCH_SIZE,shuffle=True)
 valid_loader = DataLoader(valid_dataset,batch_size=BATCH_SIZE,shuffle=False)
 
-rmodel = RecipeModel(num_users=train_dataset.num_users)
+rmodel = RecipeModel()
 
 optimizer = torch.optim.Adam(params=rmodel.parameters())
 criterion = custom_loss  # torch.nn.CrossEntropyLoss()
@@ -103,7 +103,7 @@ for e in tqdm(range(1,EPOCHS+1),position=1):
             extra_ins[key] = extra_ins[key].to(DEVICE)
         labels = labels.to(DEVICE)
         
-        pred = rmodel(**inp,**kwargs)
+        pred = rmodel(**inp,**extra_ins)
 
         loss = criterion(pred,labels, loss_type)
         

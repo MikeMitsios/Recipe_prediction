@@ -5,20 +5,17 @@ import torch
 
 
 class RecipeModel(nn.Module):
-    def __init__(self,num_labels=5,num_users=14000):
+    def __init__(self,num_labels=5):
         super().__init__()
 
         inter_dim = 16
-        self.num_users = num_users 
         self.bert = RobertaModel.from_pretrained('roberta-base',add_pooling_layer=False)
         self.bert_config = self.bert.config
         self.bert_config.num_labels = inter_dim
         
         self.head = RobertaClassificationHead(self.bert.config)
 
-        self.user_embedding = nn.Embedding(num_users,16)
-        
-        self.aux_head = nn.Sequential(nn.Linear(3+16,128),nn.ReLU(),nn.Linear(128,inter_dim))
+        self.aux_head = nn.Sequential(nn.Linear(3,32),nn.ReLU(),nn.Linear(32,inter_dim))
 
         self.cls_head = nn.Linear(2*inter_dim,num_labels)
 
@@ -29,9 +26,8 @@ class RecipeModel(nn.Module):
         rc = kwargs['reply_count'].unsqueeze(-1)
         tu = kwargs['thumbs_up'].unsqueeze(-1)
         td = kwargs['thumbs_down'].unsqueeze(-1)
-        user_emb = self.user_embedding(kwargs['user_id'])
 
-        total_feat = torch.cat([rc,tu,td,user_emb],dim=-1)
+        total_feat = torch.cat([rc,tu,td],dim=-1)
         x_other = self.aux_head(total_feat)
 
         total_x = torch.cat([x_bert,x_other],dim=-1)
